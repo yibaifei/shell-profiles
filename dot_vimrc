@@ -5,3 +5,44 @@ if filereadable( expand( "$HOME/.vimrc_flw" ) )
     source ~/.vimrc_flw
 endif
 " flw vim script end
+
+" normal 模式下换行
+nmap <C-CR> i<CR><ESC>
+nmap <S-CR> i<CR><ESC>
+nmap Z :qa<CR>
+
+" 行尾空格
+highlight WhitespaceEOL ctermbg=red guibg=red
+match WhitespaceEOL /"s"+$/
+
+"" git 及编译相关操作
+" 编译当前文件，工作路径需要在 Makfile 所在的路径，且 Makefile 支持
+map <silent><F5> <ESC>:w<CR>:silent make $(echo % \\| sed 's/cpp$/o/g') DEBUG=1<CR><C-L>:cw<CR>
+" 关闭 cwindow
+map <silent><F6> <ESC>:ccl<CR>
+" 以 -p 的方式缓存当前文件的修改
+map <silent><F1> <ESC>:silent !if [[ $(git ls-files % \| wc -l) -eq 0 ]]; then git add %; else git add -p %;fi<CR><C-L>
+" 查看当前文件的 git blame 信息
+"map <S-F4> <ESC>:silent !git blame %<CR><C-L>
+map <silent><F7> <ESC>:Gblame<CR><C-L>
+map <silent><F3> <ESC>:silent !git log -p %<CR><C-L>
+
+" 设置最大标签数
+set tabpagemax=9999
+set wildmode=longest:full
+set wildignore=*.o,*.obj,*.d
+
+" 将 cscope 的结果显示在 quickfix 中
+"set cscopequickfix=c-,d-,e-,g-,i-,s-,t-
+"set cscopequickfix=s-,c-,d-,i-,t-,e-
+"set cscopequickfix=s-
+nmap <SPACE> :
+map <C-s> :w
+
+" 修改 ctrl-s 为保存操作
+" 注意，需要在 .bashrc 中配置 `stty -ixon`
+nmap <C-S> :w!<CR>i
+vmap <C-S> <C-C>:w!<CR>
+imap <C-S> <Esc>:w!<CR>i
+
+set history=9999
