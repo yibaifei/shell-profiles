@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+set ip [lindex $argv 0]
+set user [lindex $argv 1]
+set password [lindex $argv 2]
+set port [lindex $argv 3]
+set timeout 10
+
+spawn ssh -p $port $user@$ip
+expect {
+    "*WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!*" { exec sed -i "/^$ip /d" /opt/wff/.ssh/known_hosts; exp_continue }
+    "*yes/no" { send "yes\r"; exp_continue }
+    "*password:" { send "$password\r" }
+}
+interact

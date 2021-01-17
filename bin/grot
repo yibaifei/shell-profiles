@@ -1,0 +1,61 @@
+#!/bin/sh
+
+## 说明
+# 此脚本封装了 git rebase --onto 操作
+# 将其他分支(比如 origin/develop) rebase 到当前分支上
+
+get_the_current()
+{
+    cat "$(git rev-parse --git-dir 2>/dev/null)/HEAD" | sed -e 's/^.*refs\/heads\///'
+}
+
+fun_get_commit_count()
+{
+    git rev-list --count $(git rev-list --merges HEAD | head -1)..HEAD
+}
+
+git_rebase_onto() {
+    local curBranch=$(get_the_current)
+    typeset -l ret
+    fun_confirm "是否更新仓库" && git fetch --all --prune
+    dispLine=$(($2+3))
+    echo
+    git log --oneline -n$dispLine |sed -e ''$2'a\\t──────────────────────────────' -e 's/^/\t/g'
+    echo -e "\t──────────────────────────────"
+    { echo "==> $1"; git log --oneline -n3 $1; } |sed 's/^/\t/g'
+    echo
+    fun_confirm "是否应用 $1 的修改到当前分支 $curBranch, 并保留 $2 个 commit" && {
+        echo git rebase --autostash --onto ${1:?请提供要rebase的分支,如origin/develop} $curBranch~${2:?请提供要rebase的commit数,如3} $curBranch
+        git rebase --autostash --onto ${1:?请提供要rebase的分支,如origin/develop} $curBranch~${2:?请提供要rebase的commit数,如3} $curBranch
+    }
+}
+
+help() {
+cat <<EOF
+Usage:
+    $(basename $0) -h               打印帮助信息
+    $(basename $0)                  rebase 基准为 origin/develop, commit count 为 1
+    $(basename $0) <nums>           rebase 基准为 origin/develop, commit count 为 <nums>
+    $(basename $0) <branch>         rebase 基准为 <branch>, commit count 为 1
+    $(basename $0) <branch> <nums>  rebase 基准为 <branch>, commit count 为 <nums>
+EOF
+    exit
+}
+
+[[ $1 == "-h" || $1 == "--help" ]] && help
+
+. ~/bin/functions
+
+if [[ -z $1 ]]; then
+    ob=origin/develop; cc=$(fun_get_commit_count)
+elif [[ -z $2 ]]; then
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        ob=origin/develop; cc=$1
+    else
+        ob=$1; cc=$(fun_get_commit_count)
+    fi
+else
+    ob=$1; cc=$2
+fi
+
+git_rebase_onto $ob $cc

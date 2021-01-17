@@ -1,0 +1,64 @@
+#!/bin/sh
+
+usage() {
+    cat <<EOF
+Usage:
+     此脚本用于推送时保证可快进合并
+     使用方法
+     $0
+EOF
+    exit 0
+}
+
+[[ $1 == -h || $1 == --help ]] && help
+set -ue
+
+fun_confirm()
+{
+    local ans=
+    read -p "$@[Y|n]?: " ans
+    case ${ans:-Y} in
+    Y|y|yes|YES)
+        return 0;;
+    esac
+
+    return 1
+}
+
+# 是否可以快进合并
+fun_is_ff()
+{
+    local new=$1 old=${2:?fun_is_ff <new commit id> <old commit id>}
+    local father=$(git merge-base $new $old)
+    [[ $father == $old ]] && return 0
+    return 1
+}
+
+fun_confirm 是否同步远程仓库 && git fetch --all || exit 1
+
+curr_commitid=$(git log | awk 'NR==1{print $2;exit}')
+index=1
+echo
+for s in origin/develop $(git branch -a --color=never | grep -v origin/HEAD | grep -E 'origin/release' | sed 's/remotes\///g' | sort -Vr); do
+    prefix=" "
+    fun_is_ff $curr_commitid $(git rev-parse $s) && prefix="*"
+    echo "$prefix $index: $s"
+    arr[$index]=$s
+    ((index++))
+done
+echo
+
+push_flag=""
+echo -ne "带(*)的分支可快速合并，如果你要合并的分支已带(*)请直接回车\n\
+而如果你要合并的分支不带(*)，请选择相应的分支先执行 rebase[1..$((index-1))]: "
+read select
+[[ $select ]] && {
+    fun_confirm "是否要 rebase 到 ${arr[$select]}" && {
+        push_flag="-f"
+        git rebase --autostash ${arr[$select]} || { echo "rebase 失败。请处理后再推送！"; exit 1; }
+    }
+}
+curr_branch=$(git rev-parse --abbrev-ref HEAD)
+fun_is_ff origin/$curr_branch $curr_branch || push_flag="-f"
+echo "git push --set-upstream $push_flag origin $curr_branch"
+git push --set-upstream $push_flag origin $curr_branch

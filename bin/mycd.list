@@ -1,0 +1,11 @@
+~/mobile-stock/trade-service-log-tool/lib
+~/mobile-stock/trade-service-log-tool/bin
+~/mobile-stock/trade-service-v3/src
+~/mobile-stock/trade-service-v3/test
+~/mobile-stock/trade-service-v3/bin
+~/mobile-stock/trade-service-v3/log
+~/mobile-stock/trade-service-v3/etc
+~/mobile-stock/web-switch/etc
+~/mobile-stock/web-switch/logs
+~/mobile-stock/web-switch/etc/location.d
+~/mobile-stock/web-switch/etc/upstream.d

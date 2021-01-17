@@ -70,5 +70,275 @@ bindkey '^N' history-search-forward
 
 export GOPATH=~/.go
 
-. ~/.wffrc
+# wff added
+alias_fun_confirm() {
+    local msg=$1
+    echo -n "$msg [Y/n]: "
+    local ans=
+    read ans
+    #echo
+
+    #echo "==${ans:=y}=="
+    case ${ans:=y} in
+    y|Y)
+        return 0;;
+    *)
+        return 1;;
+    esac
+}
+
+alias_fun_confirm_ok() {
+    local msg=$1
+    echo -n "$msg [yes]: "
+    local ans=
+    read ans
+    [[ $ans == yes ]] && return 0
+    return 1
+}
+
+alias fn='find -name'
+
+alias_fun_get_all_main_branch() {
+    git log --pretty='%d' --all | sed 's/[ ()]//g;s/,/ /g' | xargs -n1 | grep -E '^(develop|release\/.*)$' --color=none
+}
+
+alias_fun_get_last_main_branch() {
+    git log --pretty='%d' | sed 's/[ ()]//g;s/,/ /g' | xargs -n1 | grep -E '^(develop|release\/.*)$' --color=none | head -1
+}
+
+alias_fun_rebase() {
+    mb=$(alias_fun_get_all_main_branch)
+    local lb=$(alias_fun_get_last_main_branch)
+    local commits=$(git rev-list $lb..HEAD | wc -l)
+    git log $lb..HEAD --pretty='%Cred%h%Creset - %Cgreen(%ai)%Creset %s %C(bold blue)<%an>%Creset' --abbrev-commit | cat
+    echo "---------- $lb ----------"
+    if alias_fun_confirm "是否 rebase 到 origin/$lb"; then
+        echo git rebase origin/$lb
+        git rebase origin/$lb || return 1
+    else
+        declare -a arr;
+        local index=0
+        for s in $(echo $mb); do
+            ((index++))
+            arr[$index]=origin/$s
+            echo "$index: [origin/$s]"
+        done
+        echo -n "选择要合并的分支[1..$index](0 不rebase)以及要rebase的commit个数: "
+        read ans numbers
+        [[ -z $ans || $ans -eq 0 ]] && { echo 不执行 rebase; return; }
+
+        grot $arr[$ans] ${numbers:-$commits}
+    fi
+}
+
+alias gl='wff(){para1=$1; shift; grep --color=always $para1 ${@:-../log/*} -h | sort | less;};wff'
+alias sl='ss -ntpl'
+
+#alias r='grep --color=always --exclude cscope.out'
+alias r='wff(){key=$1; shift; grep --color=always -I --exclude tags --exclude cscope.out -r ${key:?请提供要过滤的字符串} ${@:-*};};wff'
+alias rn='wff(){key=$1; shift; grep --color=always -I --exclude tags --exclude cscope.out -rni ${key:?请提供要过滤的字符串} ${@:-*};};wff'
+alias rw='wff(){key=$1; shift; grep --color=always -I --exclude tags --exclude cscope.out -rnw ${key:?请提供要过滤的字符串} ${@:-*};};wff'
+alias rf='rm -fv'
+alias rrf='rm -rfv'
+alias pp='wff(){echo pp $PWD/$1;};wff'
+alias st='grep'
+alias cx='chmod +x'
+alias c='. mycd'
+alias t='cat'
+alias cn='cat -n'
+alias px='ps aux'
+alias la='ls -a'
+alias ll='ls -trl'
+alias sc='astyle --style=kr'
+alias tarc='tar czvf'
+alias tx='tar xzvf'
+alias vp='vim -p'
+alias vd='vim -d'
+alias v='vim -p'
+alias vi='vim -p'
+alias m='DEBUG=1 make'
+alias ma='make all'
+alias mc='make clean'
+alias mca='make clean-all'
+alias pg='wff(){ps aux |grep --color=always ${1:?请输出要查询的字符串} |awk "\$11!="grep""};wff'
+alias sn='ss -ntpl'
+alias sng='wff(){ss -ntpl |grep ${1:?请输入要查询的字符串}};wff'
+alias a='alias'
+alias p='pwd'
+alias k='kill'
+alias k9='kill -9'
+alias ka='killall'
+alias ka9='killall -9'
+alias pk='pkill'
+alias f='fg'
+alias ta='tmux a'
+alias glwl='git log --since="1.weeks+1.days" --oneline --all  --pretty="%h (%ai) %s <%an>" | awk '\''$5 != "Merge" && $5 != "WIP" && $5 != "index"'\'''
+alias glwls='glwl | sed "s/^.*) //g"'
+
+alias gbnu='git branch --unset-upstream'
+#alias grot='wff(){
+#    if [[ -z $1 ]]; then
+#        ob=origin/develop; cc=1
+#    elif [[ $1 =~ ^[0-9]+$ && -z $2 ]]; then
+#        ob=origin/develop; cc=$1
+#    else
+#        ob=$1; cc=$2
+#    fi
+#
+#    if [[ $1 == "-h" || $1 == "--help" || $ob == "" || $cc == "" ]]; then
+#        echo "Usage:"
+#        echo "    $(basename $0) -h               打印帮助信息"
+#        echo "    $(basename $0)                  rebase 基准为 origin/develop, commit count 为 1"
+#        echo "    $(basename $0) <nums>           rebase 基准为 origin/develop, commit count 为 <nums>"
+#        echo "    $(basename $0) <branch> <nums>  rebase 基准为 <branch>, commit count 为 <nums>"
+#        return
+#    fi
+#
+#    local curBranch=$(cat "$(git rev-parse --git-dir 2>/dev/null)/HEAD" | sed -e 's/^.*refs\/heads\///')
+#    typeset -l ret
+#    echo -n "是否更新仓库? [y|n]: "
+#    ret=; read -n 1 ret; echo
+#    [[ $ret == "y" ]] && git fetch --all --prune
+#    echo -n "是否应用 $ob 的修改到当前分支 $curBranch, 并保留 $cc 个 commit [y|n]: "
+#    ret=; read -n 1 ret; echo
+#    [[ $ret == "y" ]] && git rebase --onto ${ob:?请提供要rebase的分支,如origin/develop} $curBranch~${cc:?请提供要rebase的commit数,如3} $curBranch
+#};wff'
+
+# tag 相关的
+alias gt='wff(){git fetch;[[ -n "$(git_commits_ahead)$(git_commits_behind)" ]] && { echo 请先同步分支; return; };t=${1:=$(git describe --tags | awk -F- '\''{split($1, a, /\./); print a[1]"."a[2]"."a[3]"."a[4]+1}'\'')};alias_fun_confirm "是否要生成tag: $t" && git tag $t; alias_fun_confirm "是否要推送 $t" && git push ${2:-origin} $1};wff'
+alias gtd='wff(){git tag -d ${1:?请提供tag名}};wff'
+alias gtp='wff(){git push ${2:-origin} $1};wff'
+alias gtpd='wff(){git push ${2:-origin} :refs/tags/${1:?请提供tag名}};wff'
+
+# 分支相关的
+alias gbrd='git branch -r -d'
+alias glc='wff(){git log -n 1 $1|cat;};wff'
+alias gbc='git branch | cat'
+
+# 重新定义 glol 及 glola
+#unalias glol
+#unalias glola
+#alias glol='git log --graph --pretty='\''%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ai) %C(bold blue)<%an>%Creset'\'' --abbrev-commit'
+alias glol='git log --graph --pretty='\''%Cred%h%Creset - %Cgreen(%ai)%C(yellow)%d%Creset %s %C(bold blue)<%an>%Creset'\'' --abbrev-commit'
+alias glola='glol --all'
+
+alias b='wff(){cp -v ${1:?请输入文件名}{,.$(date +%Y%m%d%H%M%S)};};wff'
+alias bb='wff(){cp -v ${1:?请输入文件名} /opt/wff/stash/$(basename $1)_$(date +%Y%m%d%H%M%S);};wff'
+#alias b='wff(){cp ${1:?请输入文件名} $1.$(date +%Y%m%d%H%M%S)};};wff'
+alias gls='git ls-files'
+alias gpo='git push origin'
+alias gcof='wff(){git stash;git checkout ${1:?未指定分支};git stash pop;git status -s | grep UU;};wff'
+alias gcoF='git checkout -f'
+alias gcu='git commit -u -m'
+alias gg='wff(){gco ${1:--};[[ $? -ne 0 ]] && {if gco $1 2>&1 | grep 您对下列文件的本地修改将被检出操作覆盖 &> /dev/null;then alias_fun_confirm "是否要缓存当前?" && { git stash save; gco $1;};fi;};b=$1;[[ $b == "-" ]] && b=$(git_current_branch);h=$(git stash list|awk "{if(\$4==\"${b}:\"){print \$1}}"|tr -d :);[[ -n $h ]] && {alias_fun_confirm "是否要检出 stash[$(git stash list |grep "^$h:")]?" && git stash pop -q "$h";git status -s | grep -v "^??"};};wff'
+alias gpod='git push origin --delete'
+alias gdvim='wff(){cid=$1; shift; git difftool --tool=vimdiff ${cid:-HEAD}~ $cid $@;};wff '
+alias gdnvim='wff(){cid=$1; shift; git difftool --tool=vimdiff ${cid:-HEAD}~ $@;};wff '
+alias gdtvim='git difftool --tool=vimdiff'
+alias gdcvim='git difftool --cached --tool=vimdiff'
+alias gdicd='wff(){cid=$1; shift 1; git-icdiff ${cid:-HEAD}~ ${cid:-HEAD} $@;};wff '
+alias gdticd='git-icdiff'
+alias gdcicd='git-icdiff --cached'
+alias gds='git diff --stat'
+alias gmv='wff(){local cb=$(git_current_branch);gco -;gb -m $cb ${1:?请提供新的分支名};gco $1;};wff'
+alias gll='glol'
+alias glls='glol --stat'
+alias gla='glola'
+alias glap='glola -p'
+alias glas='glola --stat'
+alias gwip='git add -u; git rm $(git ls-files --deleted) 2> /dev/null; git diff --cached --stat | cat;  alias_fun_confirm "确认是否要保存?" && git commit --no-verify -m "--wip-- [skip ci]"'
+alias gstl='git stash list --pretty=format:"%C(red)%h%C(reset) - %C(dim yellow)(%C(bold magenta)%gd%C(dim yellow))%C(reset) %<(70,trunc)%s %C(green)(%ai) %C(bold blue)<%an>%C(reset)" | cat'
+alias gstls='git stash list --stat --pretty=format:"%C(red)%h%C(reset) - %C(dim yellow)(%C(bold magenta)%gd%C(dim yellow))%C(reset) %<(70,trunc)%s %C(green)(%ai) %C(bold blue)<%an>%C(reset)" | cat'
+alias gstshow='seq 0 $(git stash list | wc -l) | xargs -i git stash show -p stash@{{}}'
+alias gdcs='gdca --stat | cat'
+alias gspss='wff(){gsps --stat $@| cat;};wff'
+alias glfiles='wff(){git log --stat ${1:?未提供旧的commit}..${2:-$(git_current_branch)} |awk "/[+-]$/{print \$1}" |sort |uniq -c;};wff'
+#alias glolh='wff(){glol --color=always $1 |head -$(($LINES-5)) |sed "s/origin\/develop/\x1b[42;37;1m&\x1b[0m/g;s/(HEAD/\x1b[42;37;1m&\x1b[0m/g";};wff'
+#alias glolah='wff(){glola --color=always $1 |head -$(($LINES-5)) |sed "s/origin\/develop/\x1b[42;37;1m&\x1b[0m/g;s/(HEAD/\x1b[42;37;1m&\x1b[0m/g";};wff'
+alias glh='wff(){glol --color=always $1 |sed "s/ +0800//g" |head -$(($LINES-7)) |sed "s/\(origin\/\(develop\|release\)\|(HEAD\)/\x1b[42;37;1m&\x1b[0m/g";};wff'
+alias gah='wff(){glola --color=always $1 |sed "s/ +0800//g" |head -$(($LINES-7)) |sed "s/\(origin\/\(develop\|release\)\|(HEAD\)/\x1b[42;37;1m&\x1b[0m/g";};wff'
+#alias glolh='wff(){glol --color=always $1 |head -$(($LINES-5)) |sed "s/(.*origin\/develop[^)]*)/\x1b[41;37;1m&\x1b[0m/g;s/(HEAD[^)]*)/\x1b[44;36;1m&\x1b[0m/g";};wff'
+#alias glolah='wff(){glola --color=always $1 |head -$(($LINES-5)) |sed "s/(.*origin\/develop[^)]*)/\x1b[41;37;1m&\x1b[0m/g;s/(HEAD[^)]*)/\x1b[44;36;1m&\x1b[0m/g";};wff'
+alias gps='wff(){[[ $(git_current_branch) == develop ]] && {echo develop 不要推送. && return }; git fetch --all;alias_fun_rebase || return 1;git push --set-upstream ${1:-origin} $(git_current_branch) 2>&1 | sed "s/\(.*\(.*Everything.*\|\[new branch\]\).*\)/\x1b[32;1m\1\x1b[0m/g; s/\(.*\[\(remote \)*rejected\].*\)/\x1b[31;1;5m\1\x1b[0m/g";};wff'
+alias gpsf='wff(){[[ $(git_current_branch) == develop ]] && {echo develop 不要推送. && return }; git fetch --all;alias_fun_rebase || return 1;git push -f --set-upstream ${1:-origin} $(git_current_branch) 2>&1 | sed "s/\(.*\(.*Everything.*\|\[new branch\]\|(forced update)\).*\)/\x1b[32;1m\1\x1b[0m/g; s/\(.*\[\(remote \)*rejected\].*\)/\x1b[31;1;5m\1\x1b[0m/g";};wff'
+#alias gpsf='wff(){git push -f --set-upstream ${1:-origin} $(git_current_branch);};wff'
+alias gmtvim='git mergetool --tool=vimdiff'
+#alias gbv='git branch -vv --color=always | sed "s/behind [0-9]\\+/\\x1b[48;5;196m\\x1b[38;5;230m&\\x1b[m/; s/ahead [0-9]\\+/\\x1b[48;5;34m\\x1b[38;5;230m&\\x1b[m/"'
+#alias gbv='git branch -vv --color=always | sed "s/behind [0-9]\\+/\\x1b[41;37;1m&\\x1b[0m/g; s/ahead [0-9]\\+/\\x1b[42;37;1m&\\x1b[0m/g; s/\(gone\)]/\\x1b[43;37;1m\1\\x1b[0m]/g; /^\* /s/\] \(.*\)$/\] \\x1b[36;3m\1\\x1b[0m/g"'
+#alias gbv='git branch -vv | cat | sed "s/behind [0-9]\\+/\\x1b[41;37;1m&\\x1b[0m/g; s/ahead [0-9]\\+/\\x1b[42;37;1m&\\x1b[0m/g; s/\(gone\)]/\\x1b[43;37;1m\1\\x1b[0m]/g; /^\* /s/\] \(.*\)$/\\x1b[36;3m\1\\x1b[0m/g"'
+alias gbv='git branch -vv --color=never | sed "s/.*//g" | sed "s/behind [0-9]\\+/\\x1b[41;37;1m&\\x1b[0m/g; s/ahead [0-9]\\+/\\x1b[42;37;1m&\\x1b[0m/g; s/\(gone\)]/\\x1b[43;37;1m\1\\x1b[0m]/g; /^\* /s/ \([A-Z][A-Za-z]*:.*\|Merge branch .*\)$/ \\x1b[36;3m\1\\x1b[0m/g"'
+#alias gbv='git branch -vv --no-color | sed "s/behind [0-9]\\+/\\x1b[41;37;1m&\\x1b[0m/g; s/ahead [0-9]\\+/\\x1b[42;37;1m&\\x1b[0m/g; s/\(gone\)]/\\x1b[43;37;1m\1\\x1b[0m]/g; /^\* /s/\(.*\)/\\x1b[36;3m\1\\x1b[0m/g"'
+alias gbu='git branch -u'
+alias gsg='wff(){git status -s $@ |grep -v "^??";};wff'
+alias gsgu='wff(){git status -s $@ |grep -v "^??" | awk "\$1~/U/";};wff'
+alias des='sed -i "s/\s\+$//g"'
+alias gbk='git branch $(git_current_branch)-bak'
+alias gbD='git branch -D'
+alias gbda='git branch --no-color --merged origin/$(git_current_branch) | command grep -vE "^(\*|\s*(master|develop|release.*|dev)\s*$)" | command xargs -n 1 git branch -d'
+#git branch -r -d origin/branch-name
+#git push origin :branch-name
+alias gpD='wff(){git branch -r -d ${2:=origin}/${1:?请提供要删除的远程分支名};};wff'
+alias mtags='ctags -R --c-kinds=+p --fields=+S;cscope -qbR'
+alias grd='wff(){ gfa && alias_fun_confirm "是否要 rebase 到 ${1:=origin/develop}" && git rebase --autostash ${1:=origin/develop};};wff'
+alias gro='wff(){git rebase --autostash ${1:=origin}/$(git_current_branch);};wff'
+alias grof='wff(){alias_fun_confirm "强制同步到 ${1:=origin}/$(git_current_branch)" && git reset --hard ${1:=origin}/$(git_current_branch);};wff'
+alias ascp='sshpass -p 654321 scp '
+# 缓存问题
+alias gstlh='gstl |head -20'
+alias gsls='wff(){all=$(git stash list | wc -l);for s in $(seq 0 $((all-1))); do git show --pretty=short --show-signature stash@{$s};alias_fun_confirm $idx 下一个;done;};wff'
+alias gstda='alias_fun_confirm "是否要清除所有缓存" && while :; do git stash drop; [[ $? -ne 0 ]] && break; done'
+alias gstd='alias_fun_confirm_ok "\033[31;1m删除后将无法恢复，确认要删除 stash?\033[0m" && git stash drop'
+alias gs='git status'
+alias mx='wff(){[[ -n $1 ]] && eval m BS=\"$@\" || m BS=x;};wff'
+mcd() { mkdir -p "$1"; cd "$1";}
+cls() { cd "$1"; ls;}
+#unalias grhh
+alias grhh='wff(){
+    echo "============= 工作区未提交 ================="
+    git diff --stat --ignore-submodules --color=always |cat
+    echo "============= 缓冲区未提交 ================="
+    git diff --stat --ignore-submodules --color=always --cached |cat
+    echo -"============     暂存区   ================="
+    git stash list |cat
+    echo "========================================="
+    echo "reset --hard to ${1:=HEAD}"
+    echo -ne "\\x1b[41;1m【警告】:请查看上面的信息并确保所有修改已经提交!!\\x1b[0m [yes|no]: "
+    read ret
+    [[ $ret == "yes" ]] && git reset ${1:=HEAD} --hard
+};wff'
+alias grhs='git reset --soft'
+alias grp='git reset --patch'
+alias lh='ls -h'
+alias gst='wff(){git status $@ | grep -vE "(\.(o|d|a|orig)$)|^\s*(metric|cscope|tags|jemalloc)";};wff'
+alias glgpa='glgp --all'
+
+alias gmtest='wff(){git merge --no-commit --no-ff "$1"; git merge --abort; echo "Merge aborted";};wff'
+alias gmc='git merge --continue'
+
+alias glnet='git log --graph --decorate --oneline --simplify-by-decoration'
+alias glneta='git log --graph --decorate --oneline --simplify-by-decoration --all'
+
+#alias -s gz='tar -xzvf'
+#alias -s tgz='tar -xzvf'
+#alias -s zip='unzip'
+#alias -s bz2='tar -xjvf'
+#alias -s php=vi
+#alias -s py=vi
+#alias -s rb=vi
+#alias -s html=vi
+#alias -s cpp=vi
+#alias -s hpp=vi
+#alias -s h=vi
+#alias -s bp=vi
+#alias -s Makefile=vi
+#alias gcid="git log | head -1 | awk '{print substr(\$2,1,7)}' | pbcopy"
+
+unalias gcm
+unalias gcmsg
+alias gcmsg='[[ $(git_current_branch) == "develop" ]] && echo 请勿在 develop 上直接提交 || git commit -m'
+
+set -o vi
+PATH=$PATH:$HOME/bin
+
+. ~/mobile-stock/etc/dot-bashrc-kds-mobile-stock
 ulimit -c unlimited

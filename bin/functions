@@ -1,0 +1,71 @@
+#!/bin/sh
+## 此脚本用于提供一些共用的函数
+
+## ini
+# 读取值
+fun_ini_read_item()
+{
+    local file=$1 section=$2 key=${3:?fun_ini_read_item <file> <section> <key>}
+    sed -n '/^\['$section'\]/,/^\[/{/^\s*'$key'\s*=/s/^\s*'$key'\s*=\s*//gp}' $file | sed 's/^\s\+|\s\+$//g'
+}
+
+# 读取小结
+fun_ini_read_section()
+{
+    local file=$1 section=${2:?fun_ini_read_item <file> <section>}
+    sed -n '/^\['$section'\]/,/^\[/p}' $file | sed 's/^\s\+|\s\+$//g'
+}
+
+# 设置指定值
+fun_ini_set_value()
+{
+    #echo "[$@]"
+    #local file=$1 item=$2 key=$3 value=${4:?fun_ini_set_value <file> <item> <key> <value>}
+    local file=$1 item=$2 key=${3:?fun_ini_set_value <file> <item> <key> [value]} value=$4
+    local ori=$(sed -n '/^\s*\[\s*'$item'\s*\]\s*$/,/^\s*\[/{/^\s*'$key'\s*=/{s/^\s*'$key'\s*=\s*\([^\s]*\)\s*$/\1/;p}}' $file)
+    [[ $ori != $value ]] && sed -i '/^\s*\[\s*'$item'\s*\]\s*$/,/^\s*\[/s#^\(\s*'$key'\s*=\s*\).*#\1'$value'#' $file
+    #printf "change %-30s %-20s %-20s %20s => %20s\n" $file $item $key "[$ori]" "[$value]"
+}
+
+# 获取脚本
+fun_get_script_dir()
+{
+    dirname $(readlink -f $0)
+}
+
+fun_mail_notice()
+{
+    /usr/sbin/sendmail feifeiwang@upchina.com <<EOF
+Subject: $1
+$2
+EOF
+}
+
+fun_confirm()
+{
+    local msg=${1:?fun_confirm <msg> [default:Y/y/N/n]} default=${2:-Y}
+    local promet="Y/n"
+    case $default in
+        Y|y)
+            default=Y
+            ;;
+        N|n)
+            default=N
+            promet="y/N"
+            ;;
+        *)
+            echo "fun_confirm <msg> [default:Y/y/N/n]"
+            return 1;
+    esac
+
+    echo -n "$msg[$promet]: "
+    read ans
+    case ${ans:-$default} in
+        Y|y)
+            return 0;;
+        N|n)
+            retrun 1;;
+        *)
+            echo "fun_confirm <msg> [default:Y/y/N/n]"
+    esac
+}

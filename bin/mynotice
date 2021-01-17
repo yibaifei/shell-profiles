@@ -1,0 +1,21 @@
+#!/bin/sh
+
+## 说明，此脚本用于快速邮件发送
+
+help()
+{
+    cat <<EOF
+Usage:
+    $0 <标题> <正文>
+EOF
+    exit 0
+}
+
+[[ $1 == -h || $1 == --help ]] && help
+
+set -ue
+
+sendmail feifeiwang@upchina.com <<EOF
+Subject: $1
+$2
+EOF

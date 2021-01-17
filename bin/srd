@@ -1,0 +1,14 @@
+#!/bin/sh
+
+## 查看所有 redis
+
+. ~/bin/functions
+
+ip=$(fun_ini_read_item ~/mobile-stock/trade-service-v3/etc/config_op.ini redis_pool ip)
+port=$(fun_ini_read_item ~/mobile-stock/trade-service-v3/etc/config_op.ini redis_pool port)
+count=$(fun_ini_read_item ~/mobile-stock/trade-service-v3/etc/config_op.ini redis_pool count)
+
+for s in $(seq $port $((port+count-1))); do
+    echo "<<< $ip:$s"
+    redis-cli -h $ip -p $s keys \*
+done

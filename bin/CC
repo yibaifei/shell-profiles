@@ -1,0 +1,11 @@
+#/api/trade/ptjy/ptyw/cccx, body {"cxfx":"1","dlpj":"fyIdU31hd7ju3GpFbLuCpksAWHVEd/YeOUSAmztJF4A=#q1AidFtGuTgsVC6PCc8/NmlTFraZOOv9xFOcGfTuiLVfpP9WlMmsjXuTWQ5hEaefQeBXqKMG7Vi7PNq8pF2DmKYCy+IHGz/SNGJrcFgUp5aG6dVmbc37CBqKUa3KPrrl1Fhy91hzXyyDzOlDoVwuAg==#2#2u/z8YPozcClaEIn1ATRmQ==#","dwc":"","jymm":"******","khbz":"XYMk3Fkx+hnSkFoPFvPw2A==","khbzlx":"Z","khdbbh":"5.9.0","khdm":"tNgFiBg3mwFx2iGEmuxvjg==","lhxx":"0+ocTA8kgtvYHSDrEUCn69IQD0DvRY89/6RXBTDxwJyauwcRVdpL96xpoV37foFlU9uGGxnHuEPbzIhnpwau19EvyMMOa341em6jllk4Mp2pBYnjRPKhP6VNIila3EWhpwolItBl34c1sKTxe+Fb2be444SVtihCDCm92V+RTFdxwx9Ov7SIM6AJ25UV0UaXxBncwyseMqQ9ZU1u2n3sNXfHnx+2QvjPFSVkzYOgu3l5FUP4T9NRr4jvhf1eHPv+tD3FHM0gCeFH+g9GNM5e9zKKT6o5ZNIx0AIZr4hk9ANubPMIzymVpocv0+EBZjug","mmjmlx":"1","qqhs":"20","rzfs":"1","rznr":"","rzxx":"","sessionid":"0","userId":"9684662","ywbs":"62952332-b134-61b6-1057-52f18d044ae4","yybdm":"1803"}
+str="$@"
+
+if echo "$str" | grep -q '"mmjmlx":"1"'; then
+    cmd=$(echo "curl http://0.0.0.0:9800$str" | sed 's/, body / -d /;s/\*\{6\}/CcwwkUsjSCNQtvs8feKbWg==/g')
+else
+    cmd=$(echo "curl http://0.0.0.0:9800$str" | sed 's/, body / -d /;s/\*\{6\}/123321/g')
+fi
+echo $cmd
+echo "------------------------------------"
+$cmd

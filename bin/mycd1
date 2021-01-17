@@ -1,0 +1,64 @@
+#!/bin/bash
+
+## 说明，快速路径切换
+
+inpurdir=$1
+
+trap "return 0" 2
+
+fun_select()
+{
+    local str=$1
+    [[ -n $1 ]] || { echo 参数有误; exit 1; }
+
+    #echo "dirs -v |awk '{print \$2}' |grep \"$str\""
+    ds=$( (dirs -v |awk '{print $2}'; cat ~/bin/mycd.list) |sort -u |grep "$str")
+    #echo withends: $ds
+
+    local counts=0
+    if [[ -n $ds ]]; then
+        counts=$(echo "$ds" |wc -l)
+    fi
+
+    #echo counts: $counts
+
+    if [[ $counts -eq 1 ]]; then
+        echo "-> $ds"
+        eval cd $ds
+        return 0
+    elif [[ $counts -gt 1 ]]; then
+        unset arr_cd;
+        local index=1
+        while read line; do
+            echo $index: $line |grep --color $str
+            arr_cd[$index]=$line
+            ((index++))
+        done <<EOF
+$(echo "$ds")
+EOF
+        echo -n "select(cancel with '0'): "
+        read ans
+        #read ans -n 1
+        #read -n 1 ans
+        #echo ans: $ans
+        if [[ $ans -ne 0 ]]; then
+            echo "-> ${arr_cd[$ans]}"
+            eval cd ${arr_cd[$ans]}
+        fi
+        return 0
+    else
+        return 1
+    fi
+    return 0
+}
+
+if [[ -n $1 ]]; then
+    fun_select "$1$"
+    if [[ $? -eq 0 ]]; then return 0; fi
+    fun_select "$1"
+    if [[ $? -eq 0 ]]; then return 0; fi
+    echo 没有匹配的路径!
+else
+    #echo cd
+    cd
+fi

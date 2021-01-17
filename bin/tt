@@ -1,0 +1,50 @@
+#!/bin/sh
+
+## 此脚本用于连接其他的机器
+
+confFile=~/bin/ssh.list
+
+name=${1:?请输入要连接的机器别名}
+
+case $name in
+    l|list)
+        cat $confFile
+        exit 0
+        ;;
+    e|edit)
+        vim $confFile
+        exit 0
+        ;;
+esac
+
+ip=$(awk '$1 == "'$name'"{print $2}' $confFile)
+if [[ ! $ip ]]; then
+    read -p "输入的机器不存在，请输入 IP: " ip
+    read -p "请输入用户[kds]: " user
+    read -p "请输入密码[654321]: " pass
+    read -p "请输入端口[22]: " port
+    user=${user:-kds}
+    pass=${pass:-654321}
+    port=${port:-22}
+    echo $name ${ip:-请输入IP} $user $pass $port >> $confFile
+else
+    user=$(awk '$1 == "'$name'"{print $3}' $confFile)
+    pass=$(awk '$1 == "'$name'"{print $4}' $confFile)
+    port=$(awk '$1 == "'$name'"{print $5}' $confFile)
+fi
+
+fun_get_curr_index()
+{
+    tmux list-windows | awk '$2~/\*$/{sub(":","",$1);print $1}'
+}
+
+cmd="autologinssh $ip $user $pass $port"
+echo $cmd
+curr_index=$(fun_get_curr_index)
+tmux rename-window "[$1]"
+$cmd
+while :; do
+    [[ $(fun_get_curr_index) == $curr_index ]] && break
+    sleep 1
+done
+tmux rename-window "[$1-offline]"
