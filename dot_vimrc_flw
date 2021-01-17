@@ -68,7 +68,7 @@ let loaded_matchparen = 1
 " 仅在 Normal 模式和 Visual 模式下才可以用鼠标
 " 这意味着要想用鼠标复制到剪切板的话，只需要按
 " i 进入插入模式，或者按 : 进入命令行模式就可以了。
-set mouse=nv
+"set mouse=nv
 
 " 高亮刚刚搜索的字符串
 set hlsearch
@@ -111,7 +111,9 @@ if version >= 700
 endif
 
 " 按语法折叠，有 BUG，括号不匹配时会导致着色不正常。
-autocmd FileType perl,c,cpp,python set foldmethod=syntax
+" foldmethod=syntax 时会导致自动补速度奇慢
+"autocmd FileType perl,c,cpp,python set foldmethod=syntax
+autocmd FileType perl,c,cpp,python set foldmethod=indent
 " 最多折叠两层（一层函数，一层大流程控制），多了用处不大。
 set foldnestmax=2
 " 缺省不折叠
@@ -147,10 +149,13 @@ endif
 " 让 Vundle 把自身也管起来。这一句是必须的。
 Plugin 'gmarik/Vundle.vim'
 
+" 标签插件
+"Plugin 'bling/vim-airline'
+
 " 久经考验的插件，喜欢得不得了
-Plugin 'vimwiki/vimwiki'
+"Plugin 'vimwiki/vimwiki'
 " Plugin 'gabrielelana/vim-markdown'      " 貌似没有 markdown 插件 vimwiki 反而工作的更好？
-Plugin 'mattn/calendar-vim'
+"Plugin 'mattn/calendar-vim'
 Plugin 'yegappan/mru'
 Plugin 'jlanzarotta/bufexplorer'
 " Plugin 'taglist.vim'
@@ -162,23 +167,26 @@ Plugin 'ervandew/supertab'
 Plugin 'mattn/emmet-vim'
 Plugin 'godlygeek/tabular'
 
-Plugin 'pangloss/vim-javascript'
-Plugin 'jsx/jsx.vim'
+"Plugin 'pangloss/vim-javascript'
+"Plugin 'jsx/jsx.vim'
 
 Plugin 'groenewege/vim-less'
+" 显示行尾空白
+Plugin 'bronson/vim-trailing-whitespace'
 
 " 试用中的插件
-" if ( has("unix") ) | Plugin 'Valloric/YouCompleteMe' | endif
-if ( has("unix") && has("lua") ) | Plugin 'Shougo/neocomplete.vim' | endif
+"Plugin 'Valloric/YouCompleteMe'
+"if ( has("unix") ) | Plugin 'Valloric/YouCompleteMe' | endif
+"if ( has("unix") && has("lua") ) | Plugin 'Shougo/neocomplete.vim' | endif
 " Plugin 'vim-scripts/asciidoc.vim'
 " Plugin 'vim-scripts/TVO--The-Vim-Outliner-with-asciidoc-supp'
-Plugin 'ap/vim-css-color'
-Plugin 'dgryski/vim-godef'
-Plugin 'fatih/vim-go'
+"Plugin 'ap/vim-css-color'
+"Plugin 'dgryski/vim-godef'
+"Plugin 'fatih/vim-go'
 Plugin 'majutsushi/tagbar'
 
-Plugin 'Shutnik/jshint2.vim'
-let g:jshint2_command = 'jsxhint'
+"Plugin 'Shutnik/jshint2.vim'
+"let g:jshint2_command = 'jsxhint'
 
 Plugin 'kien/ctrlp.vim'
 "Plugin 'SirVer/ultisnips'
@@ -188,7 +196,7 @@ Plugin 'mattn/gist-vim'
 
 " Plugin 'Yggdroot/indentLine'
 
-Plugin 'daveyarwood/vim-alda'
+"Plugin 'daveyarwood/vim-alda'
 
 Plugin 'vim-scripts/DrawIt'
 " Plugin 'wincent/command-t'
@@ -196,8 +204,43 @@ Plugin 'vim-scripts/DrawIt'
 Plugin 'tpope/vim-fugitive'
 Plugin 'junegunn/gv.vim'
 
-Plugin 'airblade/vim-gitgutter'
+"Plugin 'airblade/vim-gitgutter'
+Plugin 'mhinz/vim-signify'
 Plugin 'jreybert/vimagit'
+
+Plugin 'MarcWeber/vim-addon-mw-utils'
+Plugin 'tomtom/tlib_vim'
+Plugin 'garbas/vim-snipmate'
+Plugin 'honza/vim-snippets'
+
+Plugin 'drmingdrmer/xptemplate'
+
+" C++ 语法高亮
+Plugin 'octol/vim-cpp-enhanced-highlight'
+let g:cpp_class_scope_highlight = 1
+let g:cpp_member_variable_highlight = 1
+let g:cpp_class_decl_highlight = 1
+let g:cpp_experimental_template_highlight = 1
+let g:cpp_concepts_highlight = 1
+let g:cpp_no_function_highlight = 1
+
+
+" 简单对齐插件
+Plugin 'junegunn/vim-easy-align'
+vmap <Leader>e <Plug>(EasyAlign)
+nmap <Leader>e <Plug>(EasyAlign)
+if !exists('g:easy_align_delimiters')
+      let g:easy_align_delimiters = {}
+endif
+let g:easy_align_delimiters['#'] = { 'pattern': '#', 'ignore_groups': ['String'] }
+
+" 补全
+"Plugin 'zxqfl/tabnine-vim'
+
+" 括号着色
+Plugin 'frazrepo/vim-rainbow'
+let g:rainbow_active = 1
+let g:rainbow_ctermfgs = ['lightblue', 'lightgreen', 'yellow', 'red', 'magenta']
 
 " 所有的 Plugin 都必须写在 vundle#begin() 和 vundle#end() 之间。
 call vundle#end()            " 必须
@@ -222,7 +265,8 @@ elseif has("gui_running")
     hi DiffText                     guibg=#CC0000
     hi CursorLine                   guibg=#000060
 else
-    colorscheme flwcolor
+    "colorscheme flwcolor
+    colorscheme slate
 endif
 
 " 修正和 tmux 配合时背景色刷新不正常的问题
@@ -248,7 +292,14 @@ autocmd BufNewFile,BufRead *.hrl setlocal ft=erlang
 autocmd BufNewFile,BufRead *.tt setlocal ft=html
 
 " Golang 支持
-autocmd BufNewFile,BufRead *.go setlocal ft=go
+"autocmd BufNewFile,BufRead *.go setlocal ft=go
+
+" bp 支持
+autocmd BufNewFile,BufRead *.bp setlocal ft=bp
+
+" 关闭 yaml 支持
+autocmd BufNewFile,BufRead *.yaml setlocal ft=
+autocmd BufNewFile,BufRead *.yml setlocal ft=
 
 " QuickFix 窗口中不需要行号
 autocmd FileType qf set nonumber
@@ -310,6 +361,8 @@ inoremap # X#<LEFT><C-H><RIGHT>
 
 " 有了这些映射，查找函数就更加方便了。
 if version >= 700
+    "nmap <silent> <F12><S-s> :tab cs find s <C-R>=expand("<cword>")<CR><CR>:bd<CR>:cwindow<CR>
+    nmap <silent> <F12><S-s> :set cscopequickfix=s-<CR>:tab cs find s <C-R>=expand("<cword>")<CR><CR>:cwindow<CR>:set cscopequickfix=<CR>
     nmap <silent> <F12>s :tab cs find s <C-R>=expand("<cword>")<CR><CR>
     nmap <silent> <F12>g :tab cs find g <C-R>=expand("<cword>")<CR><CR>
     nmap <silent> <F12>c :tab cs find c <C-R>=expand("<cword>")<CR><CR>
@@ -318,6 +371,7 @@ if version >= 700
     nmap <silent> <F12>f :tab cs find f <C-R>=expand("<cfile>")<CR><CR>
     nmap <silent> <F12>i :tab cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
     nmap <silent> <F12>d :tab cs find d <C-R>=expand("<cword>")<CR><CR>
+    nmap <silent> <F12>r :!ctags -R --c-kinds=+p --fields=+iaS --extra=+q;cscope -qbR<CR>:cs reset<CR>
 else
     nmap <silent> <F12>s :cs find s <C-R>=expand("<cword>")<CR><CR>
     nmap <silent> <F12>g :cs find g <C-R>=expand("<cword>")<CR><CR>
@@ -327,6 +381,7 @@ else
     nmap <silent> <F12>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
     nmap <silent> <F12>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
     nmap <silent> <F12>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+    nmap <silent> <F12>r :!ctags -R --c-kinds=+p --fields=+iaS --extra=+q;cscope -qbR<CR>:cs reset<CR>
 endif
 
 nmap <silent> <F10> :tabe ~/vimwiki/程序员英语.mkd<CR>G
@@ -390,18 +445,20 @@ autocmd FileType alda nmap <silent> <F5> :call system("alda play --file " . expa
 
 " 用井号来打开/关闭 quickfix 窗口
 nmap <silent> # :vimgrep <cword> %<CR>:cw<CR>
-nmap <silent> g# :vimgrep <cword> *.c *.h *.pl *.pm<CR>:cw<CR>
+nmap <silent> g# :vimgrep <cword> **/*.cpp **/*.hpp **/*.c **/*.h **/*.pl **/*.pm<CR>:cw<CR>
 autocmd FileType qf :nmap <buffer><silent> # :windo 2match none<CR>:q<CR>
 
 " quick fix 窗口中可以预览
 autocmd FileType qf :nnoremap <buffer><silent> v <CR>zz:setlocal cul<CR>:wincmd p<CR>
-"autocmd FileType qf :nnoremap <buffer><silent> v <CR>zz:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>:wincmd p<CR>
+autocmd FileType qf :nnoremap <buffer><silent> v <CR>zz:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>:wincmd p<CR>
 autocmd FileType qf :nnoremap <buffer><silent> <CR> <CR>
 autocmd FileType qf :setlocal cursorline
 
 " 可以跳转 quick fix 窗口中的内容
-nmap <silent> <F9>     :cn<CR>:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>
-nmap <silent> <S-F9>   :cp<CR>:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>
+"nmap <silent> <F9>     :cn<CR>:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>
+"nmap <silent> <S-F9>   :cp<CR>:exec "2match FlwQfCurLine /\\%" . line(".") . "l/"<CR>
+nmap <silent> <F9>    :cn<CR>
+nmap <silent> <F10>   :cp<CR>
 
 " }}}
 
@@ -412,6 +469,8 @@ nmap <C-N>      gt
 nmap <C-P>      gT
 
 " Normal 模式下用 TAB 键切换当前窗口。
+"nmap <silent> <TAB>     <C-W>w
+"tab 用来跳转
 nmap <silent> <TAB>     <C-W>w
 nmap <silent> <S-TAB>   <C-W>p
 
@@ -445,7 +504,8 @@ imap <silent> <F11> <ESC>:call FlwSaveOrRestoreLayout()<CR>a
 nnoremap <silent> ,, ,
 
 " Q 不保存退出，X 保存退出
-nmap Q :q!<CR>
+"nmap Q :q!<CR>
+nmap Q :q<CR>
 nmap X :x<CR>
 
 " 我老是习惯用 Ctrl+O 跳回原来，但是不如 Ctrl+T 好使。这么一映射，好使多了。
@@ -477,9 +537,9 @@ nnoremap <silent> ,M M
 autocmd BufEnter __MRU_Files__ nnoremap <buffer><silent> M :q<CR>
 
 " C 开启/关闭日历
-nmap <silent> C :Calendar<CR>
-nnoremap <silent> ,C C
-autocmd BufEnter __Calendar nnoremap <buffer><silent> C :q<CR>
+"nmap <silent> C :Calendar<CR>
+"nnoremap <silent> ,C C
+"autocmd BufEnter __Calendar nnoremap <buffer><silent> C :q<CR>
 
 " 空格键勾上或者去掉 TODO LIST 项目
 autocmd FileType vimwiki map <buffer><silent> <Space> <Plug>VimwikiToggleListItem
@@ -609,7 +669,10 @@ hi MyTagListFileName guifg=black guibg=grey
 
 " tagbar ----{{{
 " 设置 tagbar 出现在屏幕左边。
-let g:tagbar_left=1
+let g:tagbar_left = 1
+let g:tagbar_width = 30
+let g:tagbar_autofocus = 1
+let g:tagbar_sort = 0
 if has("win32")
     let g:tagbar_iconchars = ['+', '-']  " (default on Windows)
 else
@@ -672,7 +735,8 @@ let g:ctrlp_working_path_mode = 'ra'
 " }}}
 
 " vim-go --- {{{
-let g:go_fmt_command = "goimports"
+"let g:go_fmt_command = "goimports"
+"let g:go_version_warning = 0
 " }}}
 
 "}}}
@@ -775,8 +839,8 @@ function! FlwHelpHelper( where )
 
 endfunction
 
-autocmd FileType c,perl,erlang,python,go nmap <silent> K :call FlwHelpHelper( "" )<CR>
-autocmd FileType c,perl,erlang,python,go nmap <silent> gK :call FlwHelpHelper( "InNewTab" )<CR>
+autocmd FileType c,perl,erlang,python,go nmap K :silent call FlwHelpHelper( "" )<CR>
+autocmd FileType c,perl,erlang,python,go nmap gK :silent call FlwHelpHelper( "InNewTab" )<CR>
 
 "}}}
 
@@ -806,9 +870,14 @@ function! FlwSvnDiffToggle()
     endif
 endfunction
 
+nmap <silent><leader>g :!git show --pretty=short --show-signature <cword><CR>
+
 " 绑定 F8 成为开启、关闭 svn diff 效果的快捷键
-nmap <silent> <F8> :call FlwSvnDiffToggle()<CR>
-nmap <silent> <S-F8> :new __SVN_DIFF__ <CR>:read !svn diff<CR>:setlocal syntax=diff buftype=nofile<CR>gg
+"nmap <silent> <F8> :call FlwSvnDiffToggle()<CR>
+"nmap <silent> <F8> :!git difftool --no-prompt --tool=vimdiff %<CR>
+"nmap <silent> <F8> :![[ $(git diff % \| wc -l) -ne 0 ]] && git difftool --no-prompt --tool=vimdiff %; [[ $(git diff --cached % \| wc -l) -ne 0 ]] && git difftool --cached --no-prompt --tool=vimdiff %<CR>
+nmap <silent> <F8> :Gvdiffsplit!<CR>
+"nmap <silent> <S-F8> :new __SVN_DIFF__ <CR>:read !svn diff<CR>:setlocal syntax=diff buftype=nofile<CR>gg
 
 "}}}
 
